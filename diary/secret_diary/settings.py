@@ -69,6 +69,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'secret_diary.wsgi.application'
 
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "your_account"
+LOGOUT_REDIRECT_URL = "index"
+
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases

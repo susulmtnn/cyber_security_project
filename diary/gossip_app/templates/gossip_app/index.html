@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>Hey Upper East Siders. Gossip Girl here.</h1>
+    <p>Welcome to the place where the dreams can come true as fast as they can vanish. You never know.</p>
+    <p>To enter to the realm of truth, please log in.</p>
+    <h2>Login</h2>
+<form action="{% url 'login' %}" method="get">
+    <button type="submit">Login</button>
+</form>
+
+<form action="{% url 'register' %}" method="get">
+    <button type="submit">Create account</button>
+</form>
+</form>
+</body>
+</html>
