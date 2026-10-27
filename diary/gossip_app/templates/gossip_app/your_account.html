@@ -1,5 +1,26 @@
 <h1>Welcome, {{ user.username }}</h1>
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}
+  <h2>Your gossips:</h2>
+  {% for gossip in gossips %}
+
+    <h3>{{ gossip.title }}</h3>
+
+    <p>{{ gossip.content }}</p>
+    {% endfor %}
   <button type="submit">Log out</button>
+</form>
+<p>
+    View the juiciest gossips <a href="{% url 'gossip_list' %}">here</a></p>
+    <div style="border: 1px solid black">
+    <h3>Very Secret Gossip Space</h3>
+    <p>OR if you have the very secret password, which you can only have access to if you have personally talked to Gossip Girl, you can log in to the VERY SECRET GOSSIP SPACE</p>
+        <form method="post" action="{% url 'very_secret_gossip' %}">
+    {% csrf_token %}
+
+    <label>Pasword:</label>
+    <input type="text" name="password" required>
+
+    <button type="submit">Secret login</button>
+    </div>
 </form>

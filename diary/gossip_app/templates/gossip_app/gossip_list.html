@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <h1>The juiciest gossips</h1>
+
+    {% for gossip in gossips %}
+        <h2>{{ gossip.title }}</h2>
+        <p>{{ gossip.content }}</p>
+        <p>Posted by {{ gossip.author.username }}</p>
+     {% endfor %}
+    <p> Share us with new secrets here:</p>
+    <form method="post" action="{% url 'create_gossip' %}">
+    {% csrf_token %}
+
+    <label>Title:</label>
+    <input type="text" name="title" required>
+
+    <label>Gossip:</label>
+    <textarea name="content" required></textarea>
+
+    <button type="submit">Post gossip</button>
+    <p>View your own account <a href="{% url 'your_account' %}">here</a></p>
+    <form method="post"  action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+</body>
+</form>
+</body>
+</html>
