@@ -62,16 +62,55 @@ def create_gossip(request):
 
     return redirect("gossip_list")
 
+#FIX (1) BROKEN ACCESS CONTROL
+# @login_required
+# def your_account(request):
+#      gossips = Gossip.objects.filter(author=request.user)
+#      return render(request, "gossip_app/your_account.html", {"gossips": gossips})
 
+# def index(request):
+#     if request.user.is_authenticated:
+#         return redirect(
+#             "your_account")
+#---END OF FIX (1)
+
+#HERE IS THE FLAW (1). Changes to the your_account view and index:
 @login_required
-def your_account(request):
-    gossips = Gossip.objects.filter(author=request.user)
-    return render(request, "gossip_app/your_account.html", {"gossips": gossips})
+def your_account(request, username):
+    gossips = Gossip.objects.filter(
+        author__username=username
+    )
 
+    return render(
+        request,
+        "gossip_app/your_account.html",
+        {"gossips": gossips}
+    )
 
 def index(request):
-    return render(request, "gossip_app/index.html")
+    if not User.objects.filter(username="gossip_girl").exists():
+        User.objects.create_user(
+            username="gossip_girl",
+            password="testpassword123"
+        )
+    if not User.objects.filter(username="bob").exists():
+        User.objects.create_user(
+            username="bob",
+            password="squarepants"
+        )
+    if not User.objects.filter(username="alice").exists():
+        User.objects.create_user(
+            username="alice",
+            password="redqueen"
+        )
+    if request.user.is_authenticated:
+        return redirect(
+            "your_account",
+            username=request.user.username
+        )
 
+    return render(request, "gossip_app/index.html")
+#-------END OF FLAW (1)--------
 
 def register(request):
         form = UserCreationForm(request.POST)
