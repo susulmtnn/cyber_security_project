@@ -6,34 +6,32 @@ from django.contrib.auth.decorators import login_required
 from .models import Gossip, Comment, SecretPasword
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.utils.safestring import mark_safe
 
 #HERE IS THE FLAW (2) CRYPTOGRAPHIC FAILURES
-# @login_required
-# def very_secret_gossip(request):
-#     password, created = SecretPasword.objects.get_or_create(password="secret")
-#     if request.method == "POST" and request.POST.get("password") == password.password:
-#         return render(request, "gossip_app/very_secret_gossip_space.html")
-#     return HttpResponse(
-#         "<script>alert('Wrong password'); history.back();</script>"
-#     )
+@login_required
+def very_secret_gossip(request):
+    password, created = SecretPasword.objects.get_or_create(password="secret")
+    if request.method == "POST" and request.POST.get("password") == password.password:
+        return render(request, "gossip_app/very_secret_gossip_space.html")
+    return HttpResponse(
+        "<script>alert('Wrong password'); history.back();</script>"
+    )
 #-----------END OF FLAW (2)------------------
 
 #Here is the fix to flaw (2) CRYPTOGRAPHIC FAILURES
 
-@login_required
-def very_secret_gossip(request):
-    made_password = make_password("secret", salt=None, hasher='default')
-    stored_password, created = SecretPasword.objects.get_or_create(password=made_password)
-    if request.method == "POST" and check_password(request.POST.get("password"),stored_password.password):
-        return render(request,"gossip_app/very_secret_gossip_space.html")
-    else:
-        return HttpResponse("<script>alert('Wrong password'); history.back();</script>")
+# @login_required
+# def very_secret_gossip(request):
+#     made_password = make_password("secret", salt=None, hasher='default')
+#     stored_password, created = SecretPasword.objects.get_or_create(password=made_password)
+#     if request.method == "POST" and check_password(request.POST.get("password"),stored_password.password):
+#         return render(request,"gossip_app/very_secret_gossip_space.html")
+#     else:
+#         return HttpResponse("<script>alert('Wrong password'); history.back();</script>")
 
 #-----END OF FIX (2) CRYPTOGRAPHIC FAILURES
 
-#FLAW (3): INJECTION - STORED XSS
-#placeholder (nothingyet)
-    
 @login_required
 def gossip_list(request):
     gossip_girl, created = User.objects.get_or_create(
@@ -60,11 +58,17 @@ def gossip_list(request):
     )
     gossips = Gossip.objects.all()
 
-    return render(
+
+    #--------------FLAW (3): INJECTION 
+    for gossip in gossips:
+        gossip.content = mark_safe(gossip.content)
+
+    #--------------END OF FLAW (3)
+    #Fix (3): Just comment out the loop for flaw (3)
+        return render(
         request,
         "gossip_app/gossip_list.html",
-        {"gossips": gossips}
-    )
+        {"gossips": gossips})
 
 @login_required
 def create_gossip(request):

@@ -7,12 +7,15 @@
 </head>
 <body>
     <h1>The juiciest gossips</h1>
-
     {% for gossip in gossips %}
-        <h2>{{ gossip.title }}</h2>
-        <p>{{ gossip.content }}</p>
-        <p>Posted by {{ gossip.author.username }}</p>
-     {% endfor %}
+
+    <h2>{{ gossip.title }}</h2>
+
+    <p>{{ gossip.content }}</p>
+
+    <p>Posted by {{ gossip.author.username }}</p>
+
+    {% endfor %}
     <p> Share us with new secrets here:</p>
     <form method="post" action="{% url 'create_gossip' %}">
     {% csrf_token %}
