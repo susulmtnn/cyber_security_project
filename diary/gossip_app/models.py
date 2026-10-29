@@ -19,5 +19,7 @@ class Comment(models.Model):
     )
 
     content = models.TextField()
+class SecretPasword(models.Model):
+    password = models.TextField()
 
 # Create your models here.

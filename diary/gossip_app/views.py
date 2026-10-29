@@ -1,20 +1,39 @@
 from django.contrib.auth import login
 from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render
+from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
-from .models import Gossip, Comment
+from .models import Gossip, Comment, SecretPasword
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 
+#HERE IS THE FLAW (2) CRYPTOGRAPHIC FAILURES
+# @login_required
+# def very_secret_gossip(request):
+#     password, created = SecretPasword.objects.get_or_create(password="secret")
+#     if request.method == "POST" and request.POST.get("password") == password.password:
+#         return render(request, "gossip_app/very_secret_gossip_space.html")
+#     return HttpResponse(
+#         "<script>alert('Wrong password'); history.back();</script>"
+#     )
+#-----------END OF FLAW (2)------------------
+
+#Here is the fix to flaw (2) CRYPTOGRAPHIC FAILURES
 
 @login_required
 def very_secret_gossip(request):
-    if request.method == "POST" and request.POST.get("password") == "secret":
-        return render(request, "gossip_app/very_secret_gossip_space.html")
-    return HttpResponse(
-        "<script>alert('Wrong password'); history.back();</script>"
-    )
+    made_password = make_password("secret", salt=None, hasher='default')
+    stored_password, created = SecretPasword.objects.get_or_create(password=made_password)
+    if request.method == "POST" and check_password(request.POST.get("password"),stored_password.password):
+        return render(request,"gossip_app/very_secret_gossip_space.html")
+    else:
+        return HttpResponse("<script>alert('Wrong password'); history.back();</script>")
 
+#-----END OF FIX (2) CRYPTOGRAPHIC FAILURES
+
+#FLAW (3): INJECTION - STORED XSS
+#placeholder (nothingyet)
+    
 @login_required
 def gossip_list(request):
     gossip_girl, created = User.objects.get_or_create(
@@ -61,24 +80,12 @@ def create_gossip(request):
                 )
 
     return redirect("gossip_list")
-
-#FIX (1) BROKEN ACCESS CONTROL
-# @login_required
-# def your_account(request):
-#      gossips = Gossip.objects.filter(author=request.user)
-#      return render(request, "gossip_app/your_account.html", {"gossips": gossips})
-
-# def index(request):
-#     if request.user.is_authenticated:
-#         return redirect(
-#             "your_account")
-#---END OF FIX (1)
-
-#HERE IS THE FLAW (1). Changes to the your_account view and index:
+#HERE IS THE FLAW (1).BROKEN ACCESS CONTROL. Changes to the your_account view and index:
 @login_required
 def your_account(request, username):
+    user = User.objects.get(username=username)
     gossips = Gossip.objects.filter(
-        author__username=username
+        author=user
     )
 
     return render(
@@ -111,6 +118,20 @@ def index(request):
 
     return render(request, "gossip_app/index.html")
 #-------END OF FLAW (1)--------
+
+#FIX (1) BROKEN ACCESS CONTROL
+# @login_required
+# def your_account(request, username):
+#      gossips = Gossip.objects.filter(author=request.user)
+#      return render(request, "gossip_app/your_account.html", {"gossips": gossips})
+
+# def index(request):
+#     if request.user.is_authenticated:
+#         return redirect(
+#             "your_account",  username=request.user.username)
+#     return render(request, "gossip_app/index.html")
+#---END OF FIX (1)
+
 
 def register(request):
         form = UserCreationForm(request.POST)
