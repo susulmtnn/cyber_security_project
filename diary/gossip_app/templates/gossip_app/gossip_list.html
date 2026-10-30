@@ -27,9 +27,8 @@
     <textarea name="content" required></textarea>
 
     <button type="submit">Post gossip</button>
-    <p>View your own account <a href="{% url 'your_account' username=request.user.username %}">here</a></a></p>
+    </form>
+    <p>View your own account <a href="{% url 'your_account' username=request.user.username %}">here</a></p>
     <form method="post"  action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
-</body>
-</form>
 </body>
 </html>

@@ -7,6 +7,7 @@ from .models import Gossip, Comment, SecretPasword
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
+import time
 
 #HERE IS THE FLAW (2) CRYPTOGRAPHIC FAILURES
 @login_required
@@ -65,7 +66,7 @@ def gossip_list(request):
 
     #--------------END OF FLAW (3)
     #Fix (3): Just comment out the loop for flaw (3)
-        return render(
+    return render(
         request,
         "gossip_app/gossip_list.html",
         {"gossips": gossips})
@@ -91,11 +92,18 @@ def your_account(request, username):
     gossips = Gossip.objects.filter(
         author=user
     )
+    if "login_time" not in request.session:
+        request.session["login_time"] = time.time()
+
+    seconds_logged_in = int(
+        time.time() - request.session["login_time"]
+    )
 
     return render(
         request,
         "gossip_app/your_account.html",
-        {"gossips": gossips}
+        {"gossips": gossips, 
+         "seconds_logged_in": seconds_logged_in}
     )
 
 def index(request):
@@ -127,7 +135,14 @@ def index(request):
 # @login_required
 # def your_account(request, username):
 #      gossips = Gossip.objects.filter(author=request.user)
-#      return render(request, "gossip_app/your_account.html", {"gossips": gossips})
+
+#      if "login_time" not in request.session:
+#         request.session["login_time"] = time.time()
+
+#      seconds_logged_in = int(
+#         time.time() - request.session["login_time"]
+#     )
+#      return render(request, "gossip_app/your_account.html", {"gossips": gossips, "seconds_logged_in": seconds_logged_in})
 
 # def index(request):
 #     if request.user.is_authenticated:
