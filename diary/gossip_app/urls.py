@@ -11,5 +11,9 @@ urlpatterns = [
     path("your-account/<str:username>/",views.your_account,name="your_account"),
     path("gossips/", views.gossip_list, name="gossip_list"),
     path("gossips/create/", views.create_gossip, name="create_gossip"),
-    path("gossip_app/very_secret_gossip_space", views.very_secret_gossip, name="very_secret_gossip")
+    path("gossip_app/very_secret_gossip_space", views.very_secret_gossip, name="very_secret_gossip"),
 ]
+if views.FIX_2_ENABLED:
+    urlpatterns.append(
+        path("set-secret-password/", views.set_secret_password, name="set_secret_password")
+    )

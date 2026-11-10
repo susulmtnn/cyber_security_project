@@ -22,4 +22,8 @@ class Comment(models.Model):
 class SecretPasword(models.Model):
     password = models.TextField()
 
+class VerySecretPassword(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="very_secret_password")
+    password = models.TextField()
+
 # Create your models here.

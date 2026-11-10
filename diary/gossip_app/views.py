@@ -3,15 +3,20 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import redirect, render
 from django.contrib.auth.hashers import make_password, check_password
 from django.contrib.auth.decorators import login_required
-from .models import Gossip, Comment, SecretPasword
+from .models import Gossip, Comment, SecretPasword, VerySecretPassword
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.utils.safestring import mark_safe
+from django.contrib import messages
+
 import time, logging
 
 logger = logging.getLogger(__name__)
 
-#HERE IS THE FLAW (2) CRYPTOGRAPHIC FAILURES
+#--------FLAW (2) Cryptographic failures
+
+FIX_2_ENABLED = False
+
 @login_required
 def very_secret_gossip(request):
     password, created = SecretPasword.objects.get_or_create(password="secret")
@@ -23,26 +28,61 @@ def very_secret_gossip(request):
     #     logger.warning("Failed Secret Gossip access attempt by: %s", request.user.username)
 #----------END OF FIX (5)---------------- (FLAW STATE IS JUST TO COMMENT THIS OUT)
 
-    return HttpResponse(
-        "<script>alert('Wrong password'); history.back();</script>"
-    )
+    return HttpResponse("<script>alert('Wrong password'); history.back();</script>")
 #-----------END OF FLAW (2)------------------
 
-#Here is the fix to flaw (2) CRYPTOGRAPHIC FAILURES
+# ----------------FIX FOR FLAW (2)-------------
+# FIX_2_ENABLED = True
 
 # @login_required
 # def very_secret_gossip(request):
-#     made_password = make_password("secret", salt=None, hasher='default')
-#     stored_password, created = SecretPasword.objects.get_or_create(password=made_password)
-#     if request.method == "POST" and check_password(request.POST.get("password"),stored_password.password):
-#         return render(request,"gossip_app/very_secret_gossip_space.html")
-#     else:
-#         #HERE IS THE FIX (5)Security Logging and Monitoring Failures.
-#         logger.warning("Failed Secret Gossip access attempt by: %s", request.user.username)
-# #----------END OF FIX (5)---------------- (FLAW STATE IS JUST TO COMMENT THIS OUT)
-#         return HttpResponse("<script>alert('Wrong password'); history.back();</script>")
-        
+#     try:
+#         stored_secret_password = VerySecretPassword.objects.get(
+#             user=request.user
+#         )
+#     except VerySecretPassword.DoesNotExist:
+#         return HttpResponse(
+#             "<script>alert('You need to set your Secret Gossip password first.'); history.back();</script>"
+#         )
+
+#     if request.method == "POST" and check_password(
+#         request.POST.get("password"),
+#         stored_secret_password.password
+#     ):
+#         return render(
+#             request,
+#             "gossip_app/very_secret_gossip_space.html"
+#         )
+#     #         #HERE IS THE FIX (5)Security Logging and Monitoring Failures.
+#     # logger.warning("Failed Secret Gossip access attempt by: %s", request.user.username)
+# # #----------END OF FIX (5)---------------- (FLAW STATE IS JUST TO COMMENT THIS OUT)
+
+#     return HttpResponse(
+#         "<script>alert('Wrong password'); history.back();</script>"
+#     )
 #-----END OF FIX (2) CRYPTOGRAPHIC FAILURES
+
+
+@login_required
+def set_secret_password(request):
+    if request.method == "POST":
+        password = request.POST.get("password")
+
+        VerySecretPassword.objects.update_or_create(
+            user=request.user,
+            defaults={
+                "password": make_password(password)
+            }
+        )
+        messages.success(
+            request,
+            "Your Very Secret Gossip password has been saved!"
+        )
+    return redirect(
+        "your_account",
+        username=request.user.username
+    )
+        
 
 @login_required
 def gossip_list(request):
@@ -71,11 +111,11 @@ def gossip_list(request):
     gossips = Gossip.objects.all()
 
 
-    #--------------FLAW (3): INJECTION-----------
+    #--------------FLAW (3): INJECTION--------
     for gossip in gossips:
         gossip.content = mark_safe(gossip.content)
 
-    #--------------END OF FLAW (3)--------------
+    #------------END OF FLAW (3)--------------
     #Fix (3): Just comment out the loop for flaw (3)
     return render(
         request,
@@ -123,7 +163,8 @@ def your_account(request, username):
         request,
         "gossip_app/your_account.html",
         {"gossips": gossips, 
-         "seconds_logged_in": seconds_logged_in}
+         "seconds_logged_in": seconds_logged_in,
+         "fix_2_enabled": FIX_2_ENABLED,}
     )
 
 def index(request):
@@ -155,12 +196,12 @@ def index(request):
 # @login_required
 # def your_account(request, username):
 # #------------- FIX (5) SECURITY LOGGING AND MONITORING FAILURES
-#     if username != request.user.username:
-#         logger.warning(
-#             "Access control failure: user %s attempted to access account %s",
-#             request.user.username,
-#             username
-#         )
+#     # if username != request.user.username:
+#     #     logger.warning(
+#     #         "Access control failure: user %s attempted to access account %s",
+#     #         request.user.username,
+#     #         username
+#     #     )
 # #END OF FIX (5) -- TO HAVE THE FLAW, JUST COMMENT THIS OUT
 #     gossips = Gossip.objects.filter(author=request.user)
 
